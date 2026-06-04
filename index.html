@@ -180,11 +180,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
       <p>夜发清溪向三峡，</p>
       <p>思君不见下渝州。</p>
     </div>
-    <div style="margin-top: 24px;">
-      <button onclick="playPoem()">🔊 听朗读</button>
-      <button onclick="stopPoem()" style="background: transparent; border: 2px solid var(--line); color: var(--muted);">⏹️ 停止</button>
-    </div>
-    <div id="audio-feedback" style="margin-top: 12px; color: var(--muted); font-size: 14px;"></div>
+
   </div>
   
   <!-- 思考题 -->
@@ -261,7 +257,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
       <p style="color: var(--muted); font-size: 14px;">这首诗记录了他<strong>第一次离开家乡</strong>的心情，既兴奋又不舍。</p>
     </div>
     
-    <button onclick="speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。')" style="margin-top: 16px;">🔊 再听一遍全诗</button>
+
   </div>
 </section>
 
@@ -279,7 +275,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     
     <div class="tip-box"><strong>💡 意思：</strong>秋天夜晚，峨眉山上升起<strong>半个月亮</strong>。</div>
     
-    <button onclick="speakText('峨眉山月半轮秋')" style="margin-top: 12px;">🔊 朗读本句</button>
+
   </div>
 
   <div class="section-card">
@@ -293,7 +289,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     <div class="tip-box"><strong>💡 意思：</strong>月亮的影子<strong>映照</strong>在平羌江水中，随着<strong>江水流动</strong>。</div>
     <div class="tip-box" style="border-left-color: var(--brand);">🌊<strong>画面感：</strong>山月、月影、江水，<strong>动静结合</strong>，非常美！</div>
     
-    <button onclick="speakText('影入平羌江水流')" style="margin-top: 12px;">🔊 朗读本句</button>
+
   </div>
 
   <div class="section-card">
@@ -309,7 +305,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     <div class="tip-box"><strong>💡 意思：</strong>夜晚从清溪出发，<strong>驶向三峡</strong>。</div>
     <div class="warn-box">🚢<strong>旅途感：</strong>诗人坐船远行，离开家乡越来越远。</div>
     
-    <button onclick="speakText('夜发清溪向三峡')" style="margin-top: 12px;">🔊 朗读本句</button>
+
   </div>
 
   <div class="section-card">
@@ -324,7 +320,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     <div class="tip-box"><strong>💡 意思：</strong>思念你却<strong>见不到你</strong>，船已经驶向了渝州。</div>
     <div class="warn-box">💔<strong>情感：</strong>离家乡越来越远，思念却越来越深。</div>
     
-    <button onclick="speakText('思君不见下渝州')" style="margin-top: 12px;">🔊 朗读本句</button>
+
   </div>
 </section>
 
@@ -436,11 +432,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 
 <script>
 // ============== 音频播放（使用语音合成API）==============
-function stopPoem() {
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
-  const fb = document.getElementById('audio-feedback');
-  if (fb) fb.textContent = '⏹️ 已停止';
-}
+
 
 // ============== 提示 ==============
 function showHint(num) {
@@ -606,43 +598,6 @@ function resetMap() {
   const fb=document.getElementById('interaction-feedback');
   if(fb){fb.className='feedback';fb.classList.remove('show');}
 }
-
-// 初始化语音（解决Chrome首次getVoices返回空数组问题）
-let cachedVoices = [];
-function loadVoices() {
-  if (!('speechSynthesis' in window)) return;
-  cachedVoices = speechSynthesis.getVoices();
-}
-if ('speechSynthesis' in window) {
-  speechSynthesis.onvoiceschanged = loadVoices;
-  loadVoices();
-}
-function speakText(text) {
-  if (!('speechSynthesis' in window)) {
-    alert('您的浏览器不支持语音朗读，请使用Chrome或Edge浏览器');
-    return;
-  }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-CN';
-  u.rate = 0.85;
-  u.pitch = 1.0;
-  // 优先使用中文语音
-  const zhVoice = cachedVoices.find(v => v.lang.startsWith('zh'));
-  if (zhVoice) {
-    u.voice = zhVoice;
-  } else if (cachedVoices.length > 0) {
-    u.voice = cachedVoices[0]; // 回退到第一个可用声音
-  }
-  const fb = document.getElementById('audio-feedback');
-  if (fb) {
-    fb.textContent = '🔊 正在播放...';
-    u.onend = () => { fb.textContent = '✅ 播放完成！'; };
-    u.onerror = () => { fb.textContent = '⚠️ 朗读不可用，请检查浏览器设置'; };
-  }
-  speechSynthesis.speak(u);
-}
-function playPoem() { speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。'); }
 
 console.log('《峨眉山月歌》v3.0 已加载');
 </script>

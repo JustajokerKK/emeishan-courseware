@@ -1,0 +1,638 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《峨眉山月歌》- 互动课件 v3.0</title>
+
+<style>
+:root {
+  --bg: #0a1628;
+  --card: #1a2d4a;
+  --brand: #4fc3f7;
+  --ok: #66bb6a;
+  --warn: #ffa726;
+  --moon-gold: #ffd54f;
+  --text: #e8f0ff;
+  --muted: #8aaac8;
+  --line: #2a4a6a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "PingFang SC", sans-serif;
+  line-height: 1.8;
+  font-size: 17px;
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+h1, h2, h3 { color: var(--brand); margin: 20px 0 12px 0; }
+.poem-container {
+  background: linear-gradient(135deg, var(--card) 0%, #1e3a5f 100%);
+  border: 2px solid var(--moon-gold);
+  border-radius: 16px;
+  padding: 32px;
+  margin: 24px 0;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(255, 213, 79, 0.15);
+}
+.poem-title { font-size: 32px; color: var(--moon-gold); margin-bottom: 12px; letter-spacing: 4px; }
+.poem-author { font-size: 18px; color: var(--muted); margin-bottom: 28px; }
+.poem-content { font-size: 24px; line-height: 2.2; letter-spacing: 2px; }
+button {
+  background: var(--brand);
+  color: var(--bg);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 6px 4px;
+  min-height: 48px;
+  transition: all 0.2s;
+}
+button:hover { opacity: 0.9; transform: translateY(-1px); }
+.quiz-options button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 14px 20px;
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--line);
+  text-align: left;
+  font-weight: normal;
+  font-size: 16px;
+  border-radius: 10px;
+  transition: all 0.25s;
+}
+.quiz-options button:hover:not(:disabled) { border-color: var(--brand); transform: translateX(4px); }
+.quiz-options button.correct {
+  border-color: var(--ok) !important;
+  background: rgba(102, 187, 106, 0.15) !important;
+}
+.quiz-options button.incorrect {
+  border-color: var(--warn) !important;
+  background: rgba(255, 167, 38, 0.15) !important;
+}
+.feedback {
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin: 14px 0;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.feedback.show { display: block; }
+.feedback.correct {
+  background: rgba(102, 187, 106, 0.15);
+  border: 2px solid var(--ok);
+  color: var(--ok);
+}
+.feedback.incorrect {
+  background: rgba(255, 167, 38, 0.15);
+  border: 2px solid var(--warn);
+  color: var(--warn);
+}
+.word-annotation {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-size: 15px;
+}
+.word-annotation strong {
+  color: var(--moon-gold);
+}
+#map-svg {
+  background: #0d1f3c;
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: none;
+}
+#draggable-moon { cursor: grab; user-select: none; }
+#draggable-moon.dragging { cursor: grabbing; opacity: 0.75; }
+.drop-circle { transition: all 0.3s; }
+.drop-circle.highlight { stroke: #4fc3f7 !important; stroke-width: 4 !important; }
+.drop-circle.placed { fill: #ffd54f; fill-opacity: 0.3; }
+.section-card {
+  background: var(--card);
+  padding: 24px;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+.hint-btn {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 16px 20px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hint-btn:hover { border-color: var(--brand); transform: translateX(4px); }
+.info-box {
+  background: var(--bg);
+  padding: 16px 20px;
+  border-radius: 10px;
+  margin: 16px 0;
+  border-left: 4px solid var(--brand);
+}
+.tip-box {
+  background: rgba(79, 195, 247, 0.08);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  border-left: 4px solid var(--brand);
+}
+.warn-box {
+  background: rgba(255, 167, 38, 0.08);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  border-left: 4px solid var(--warn);
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Hero + 诗歌展示（最前面） ========== -->
+<section id="hero" style="margin-bottom: 32px;">
+  <h1>🌙 《峨眉山月歌》</h1>
+  <p style="color: var(--muted); font-size: 19px;">和李白一起，沿着月亮的足迹去旅行</p>
+  
+  <!-- 诗歌展示 - 移到最前面 -->
+  <div class="poem-container" style="margin-top: 24px;">
+    <div class="poem-title">《峨眉山月歌》</div>
+    <div class="poem-author">【唐】李白</div>
+    <div class="poem-content">
+      <p>峨眉山月半轮秋，</p>
+      <p>影入平羌江水流。</p>
+      <p>夜发清溪向三峡，</p>
+      <p>思君不见下渝州。</p>
+    </div>
+    <div style="margin-top: 24px;">
+      <button onclick="playPoem()">🔊 听朗读</button>
+      <button onclick="stopPoem()" style="background: transparent; border: 2px solid var(--line); color: var(--muted);">⏹️ 停止</button>
+    </div>
+    <div id="audio-feedback" style="margin-top: 12px; color: var(--muted); font-size: 14px;"></div>
+  </div>
+  
+  <!-- 思考题 -->
+  <div class="info-box" style="margin-top: 20px;">
+    <p><strong>💡 思考：</strong>你有没有注意到，李白诗里的月亮会"走路"？它从一座山走到一条江，再到一个个地方……让我们一起去找找看！</p>
+  </div>
+</section>
+
+<!-- 问题锚点 -->
+<section id="questions" style="margin: 32px 0;">
+  <h2>🤔 探索问题</h2>
+  <p style="margin-bottom: 12px; color: var(--muted);">在学习这首诗之前，先思考几个问题：</p>
+  <button class="hint-btn" onclick="showHint(1)">🌙 李白的月亮为什么会"半轮"？</button>
+  <button class="hint-btn" onclick="showHint(2)">🚢 诗人为什么要说"夜发"？</button>
+  <button class="hint-btn" onclick="showHint(3)">🗺️ 月亮在诗中都去了哪些地方？</button>
+  <div id="hint-feedback" class="feedback"></div>
+</section>
+
+<!-- 学习目标 -->
+<section id="objectives" style="margin: 32px 0;">
+  <h2>🎯 学习目标</h2>
+  <div class="section-card">
+    <p style="margin: 8px 0;">✅ 能流利背诵《峨眉山月歌》</p>
+    <p style="margin: 8px 0;">✅ 理解诗中关键词：半轮、夜发、君、渝州</p>
+    <p style="margin: 8px 0;">✅ 能在地图上找出诗中的地名</p>
+    <p style="margin: 8px 0;">✅ 感受诗人旅途中的情感变化</p>
+  </div>
+</section>
+
+<!-- 课前小测 -->
+<section id="pretest" style="margin: 32px 0;">
+  <h2>📝 课前小测</h2>
+  <p style="color: var(--muted); margin-bottom: 16px;">答错了可以重新选择哦～</p>
+  
+  <div class="section-card quiz-question" data-quiz-type="pre" data-question-num="1">
+    <p><strong>问题 1：</strong>你知道李白是哪个朝代的诗人吗？</p>
+    <div class="quiz-options">
+      <button data-correct="false">A. 宋朝</button>
+      <button data-correct="true">B. 唐朝</button>
+      <button data-correct="false">C. 明朝</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+  
+  <div class="section-card quiz-question" data-quiz-type="pre" data-question-num="2">
+    <p><strong>问题 2：</strong>"月亮"在古诗中常常代表什么？</p>
+    <div class="quiz-options">
+      <button data-correct="false">A. 只是写景，没有特别意义</button>
+      <button data-correct="true">B. 思念、团圆、美好</button>
+      <button data-correct="false">C. 表示时间过得很快</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+</section>
+
+<!-- 认识李白 -->
+<section id="module1" style="margin: 32px 0;">
+  <h2>📚 认识李白</h2>
+  <div class="section-card">
+    <h3>🌟 诗仙李白（701-762）</h3>
+    <p>李白是<strong style="color:var(--moon-gold)">唐朝</strong>最伟大的诗人之一，被后人称为"诗仙"。他性格豪放，喜欢喝酒、游山玩水，走过很多地方，也写了很多关于月亮的诗。</p>
+    
+    <div class="info-box">
+      <h4 style="color: var(--brand); margin-top: 0;">📖 李白的小故事</h4>
+      <p>传说李白小时候很调皮，不喜欢读书。有一天，他看到一位老奶奶在磨一根铁杵（铁棒），说要磨成绣花针。李白很感动，从此刻苦读书，终于成为大诗人！这就是<strong>"铁杵磨成针"</strong>的故事。</p>
+    </div>
+    
+    <h3 style="margin-top: 24px;">📜 创作背景</h3>
+    <p>这首诗写于李白<strong>25岁左右</strong>的时候。他从四川老家出发，坐船沿长江东下，去外面的世界闯荡。路上，他看到<strong>峨眉山</strong>上的月亮，想起家乡和朋友们，写下了这首诗。</p>
+    
+    <div class="info-box">
+      <h4 style="color: var(--brand); margin-top: 0;">🗺️ 李白的旅行路线</h4>
+      <p>四川（家乡）→ 长江 → 各地闯荡 → 最终在安徽去世</p>
+      <p style="color: var(--muted); font-size: 14px;">这首诗记录了他<strong>第一次离开家乡</strong>的心情，既兴奋又不舍。</p>
+    </div>
+    
+    <button onclick="speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。')" style="margin-top: 16px;">🔊 再听一遍全诗</button>
+  </div>
+</section>
+
+<!-- 逐句理解 -->
+<section id="module2" style="margin: 32px 0;">
+  <h2>🔍 逐句理解</h2>
+  
+  <div class="section-card">
+    <h3>第一句：峨眉山月半轮秋</h3>
+    
+    <div class="word-annotation"><strong>峨眉山：</strong>在今天的<strong>四川省</strong>，很有名的山，风景很美。</div>
+    <div class="word-annotation"><strong>月：</strong>月亮。</div>
+    <div class="word-annotation"><strong>半轮：</strong><strong style="color:var(--moon-gold)">半个月亮</strong>（不是圆月）。可能是农历月初或月末。</div>
+    <div class="word-annotation"><strong>秋：</strong><strong style="color:var(--moon-gold)">秋天</strong>的夜晚。</div>
+    
+    <div class="tip-box"><strong>💡 意思：</strong>秋天夜晚，峨眉山上升起<strong>半个月亮</strong>。</div>
+    
+    <button onclick="speakText('峨眉山月半轮秋')" style="margin-top: 12px;">🔊 朗读本句</button>
+  </div>
+
+  <div class="section-card">
+    <h3>第二句：影入平羌江水流</h3>
+    
+    <div class="word-annotation"><strong>影：</strong>月亮的<strong style="color:var(--moon-gold)">倒影</strong>（影子映在水里）。</div>
+    <div class="word-annotation"><strong>入：</strong><strong style="color:var(--moon-gold)">映入、照进</strong>。</div>
+    <div class="word-annotation"><strong>平羌江：</strong>又叫<strong>青衣江</strong>，在四川，是长江的支流。</div>
+    <div class="word-annotation"><strong>水流：</strong>江水在<strong style="color:var(--moon-gold)">流动</strong>。</div>
+    
+    <div class="tip-box"><strong>💡 意思：</strong>月亮的影子<strong>映照</strong>在平羌江水中，随着<strong>江水流动</strong>。</div>
+    <div class="tip-box" style="border-left-color: var(--brand);">🌊<strong>画面感：</strong>山月、月影、江水，<strong>动静结合</strong>，非常美！</div>
+    
+    <button onclick="speakText('影入平羌江水流')" style="margin-top: 12px;">🔊 朗读本句</button>
+  </div>
+
+  <div class="section-card">
+    <h3>第三句：夜发清溪向三峡</h3>
+    
+    <div class="word-annotation"><strong>夜：</strong><strong style="color:var(--moon-gold)">夜晚</strong>。</div>
+    <div class="word-annotation"><strong>发：</strong><strong style="color:var(--moon-gold)">出发</strong>。</div>
+    <div class="word-annotation"><strong>夜发：</strong><strong style="color:var(--moon-gold)">夜晚出发</strong>。古代人常趁晚上凉快、江面平静时坐船出发。</div>
+    <div class="word-annotation"><strong>清溪：</strong>清溪驿，在四川<strong>犍为县</strong>，是古代水路驿站。</div>
+    <div class="word-annotation"><strong>向：</strong><strong style="color:var(--moon-gold)">驶向、前往</strong>。</div>
+    <div class="word-annotation"><strong>三峡：</strong>长江三峡（<strong>瞿塘峡、巫峡、西陵峡</strong>），非常险峻壮观。</div>
+    
+    <div class="tip-box"><strong>💡 意思：</strong>夜晚从清溪出发，<strong>驶向三峡</strong>。</div>
+    <div class="warn-box">🚢<strong>旅途感：</strong>诗人坐船远行，离开家乡越来越远。</div>
+    
+    <button onclick="speakText('夜发清溪向三峡')" style="margin-top: 12px;">🔊 朗读本句</button>
+  </div>
+
+  <div class="section-card">
+    <h3>第四句：思君不见下渝州</h3>
+    
+    <div class="word-annotation"><strong>思：</strong><strong style="color:var(--moon-gold)">思念、想念</strong>。</div>
+    <div class="word-annotation"><strong>君：</strong>你。可以指<strong>朋友</strong>、<strong>家乡</strong>，甚至是<strong>月亮</strong>（拟人化）。</div>
+    <div class="word-annotation"><strong>不见：</strong><strong style="color:var(--moon-gold)">看不到</strong>。</div>
+    <div class="word-annotation"><strong>下：</strong>顺流<strong style="color:var(--moon-gold)">而下</strong>（从上游到下游）。</div>
+    <div class="word-annotation"><strong>渝州：</strong>今天的<strong>重庆</strong>一带，古代叫渝州。</div>
+    
+    <div class="tip-box"><strong>💡 意思：</strong>思念你却<strong>见不到你</strong>，船已经驶向了渝州。</div>
+    <div class="warn-box">💔<strong>情感：</strong>离家乡越来越远，思念却越来越深。</div>
+    
+    <button onclick="speakText('思君不见下渝州')" style="margin-top: 12px;">🔊 朗读本句</button>
+  </div>
+</section>
+
+<!-- 互动地图 -->
+<section id="interaction" style="margin: 32px 0;">
+  <h2>🗺️ 互动：月亮的旅行路线</h2>
+  <p style="color: var(--muted);">把黄色的"月亮"拖到诗中提到的地名上吧！</p>
+  
+  <div class="section-card">
+    <svg id="map-svg" viewBox="0 0 800 600" width="100%" height="400" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="600" fill="#0d1f3c"/>
+      
+      <!-- 河流 -->
+      <path d="M 100 300 Q 200 280, 300 320 T 500 340 T 700 330"
+            stroke="#4fc3f7" stroke-width="3" fill="none" opacity="0.6"/>
+      <text x="350" y="360" fill="#4fc3f7" font-size="14" opacity="0.8">长江</text>
+      
+      <!-- 地点 -->
+      <circle id="emeishan-circle" cx="150" cy="200" r="40" fill="none" stroke="#ffd54f" stroke-width="2" stroke-dasharray="5,5" class="drop-circle"/>
+      <text x="150" y="260" text-anchor="middle" fill="#ffd54f" font-size="16">峨眉山</text>
+      
+      <circle id="pingqiang-circle" cx="250" cy="320" r="35" fill="none" stroke="#ffd54f" stroke-width="2" stroke-dasharray="5,5" class="drop-circle"/>
+      <text x="250" y="370" text-anchor="middle" fill="#ffd54f" font-size="16">平羌江</text>
+      
+      <circle id="qingxi-circle" cx="380" cy="340" r="35" fill="none" stroke="#ffd54f" stroke-width="2" stroke-dasharray="5,5" class="drop-circle"/>
+      <text x="380" y="390" text-anchor="middle" fill="#ffd54f" font-size="16">清溪</text>
+      
+      <circle id="sanxia-circle" cx="550" cy="350" r="40" fill="none" stroke="#ffd54f" stroke-width="2" stroke-dasharray="5,5" class="drop-circle"/>
+      <text x="550" y="405" text-anchor="middle" fill="#ffd54f" font-size="16">三峡</text>
+      
+      <circle id="yuzhou-circle" cx="650" cy="380" r="35" fill="none" stroke="#ffd54f" stroke-width="2" stroke-dasharray="5,5" class="drop-circle"/>
+      <text x="650" y="430" text-anchor="middle" fill="#ffd54f" font-size="16">渝州</text>
+      
+      <!-- 月亮 -->
+      <circle id="draggable-moon" cx="400" cy="100" r="30" fill="#ffd54f" opacity="0.9"/>
+      <text x="400" y="107" text-anchor="middle" fill="#0a1628" font-size="14" font-weight="bold" pointer-events="none">月亮</text>
+    </svg>
+    
+    <div class="info-box" style="margin-top: 16px;">
+      <p style="margin: 0;"><strong>操作说明：</strong>👆 点击黄色"月亮"，按住拖到地名圆圈上松开即可！</p>
+    </div>
+    
+    <div id="interaction-feedback" class="feedback"></div>
+    
+    <div style="margin-top: 20px;">
+      <button onclick="checkMap()">✅ 检查路线</button>
+      <button onclick="resetMap()" style="background: transparent; border: 2px solid var(--line); color: var(--text);">🔄 重新开始</button>
+    </div>
+  </div>
+</section>
+
+<!-- 课后检测 -->
+<section id="posttest" style="margin: 32px 0;">
+  <h2>✅ 课后检测</h2>
+  <p style="color: var(--muted); margin-bottom: 16px;">答错了可以重新选择哦～</p>
+  
+  <div class="section-card quiz-question" data-quiz-type="post" data-question-num="1">
+    <p><strong>问题 1：</strong>"峨眉山月半轮秋"中的"半轮"是什么意思？</p>
+    <div class="quiz-options">
+      <button data-correct="false">A. 一轮完整的月亮</button>
+      <button data-correct="true">B. 半个月亮</button>
+      <button data-correct="false">C. 三个月亮</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+  
+  <div class="section-card quiz-question" data-quiz-type="post" data-question-num="2">
+    <p><strong>问题 2：</strong>诗人在哪个时间出发？</p>
+    <div class="quiz-options">
+      <button data-correct="false">A. 清晨</button>
+      <button data-correct="false">B. 中午</button>
+      <button data-correct="true">C. 夜晚</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+  
+  <div class="section-card quiz-question" data-quiz-type="post" data-question-num="3">
+    <p><strong>问题 3：</strong>"思君不见下渝州"表达了诗人怎样的情感？</p>
+    <div class="quiz-options">
+      <button data-correct="false">A. 开心快乐</button>
+      <button data-correct="true">B. 思念家乡和朋友</button>
+      <button data-correct="false">C. 生气愤怒</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+</section>
+
+<!-- 课堂小结 -->
+<section id="summary" style="margin: 32px 0;">
+  <h2>📒 课堂小结</h2>
+  <div class="section-card">
+    <h3>今天我们学到了：</h3>
+    <p style="margin: 8px 0;">✅ 《峨眉山月歌》是李白离开家乡时写的诗</p>
+    <p style="margin: 8px 0;">✅ 诗中的月亮伴随着诗人的旅途，从峨眉山一直"走"到渝州</p>
+    <p style="margin: 8px 0;">✅ "半轮"是半个月亮，"夜发"是夜晚出发</p>
+    <p style="margin: 8px 0;">✅ "思君不见"表达了诗人对家乡和朋友的思念</p>
+    <p style="margin: 8px 0;">✅ 古诗中的月亮常常代表思念、团圆、美好</p>
+    
+    <h3 style="margin-top: 24px;">🌟 拓展思考</h3>
+    <p>李白还写过很多关于月亮的诗，比如《静夜思》《月下独酌》。找一找，看看这些诗里的月亮有什么相同和不同的地方？</p>
+  </div>
+</section>
+
+<footer style="margin-top: 48px; padding: 24px; text-align: center; color: var(--muted); font-size: 14px; border-top: 2px solid var(--line);">
+  <p>《峨眉山月歌》互动课件 v3.0</p>
+  <p>制作于 2026-06-04 | TeachAny v7.14.0</p>
+  <p style="margin-top: 12px;">🌙 跟着李白的月亮，一起爱上古诗吧！</p>
+</footer>
+
+<script>
+// ============== 音频播放 ==============
+let currentSpeech = null;
+
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  if (currentSpeech) speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.9;
+  const voices = speechSynthesis.getVoices();
+  const cv = voices.find(v => v.lang.startsWith('zh'));
+  if (cv) u.voice = cv;
+  currentSpeech = u;
+  speechSynthesis.speak(u);
+  const fb = document.getElementById('audio-feedback');
+  if (fb) {
+    fb.textContent = '🔊 正在播放...';
+    u.onend = () => { fb.textContent = '✅ 播放完成！'; };
+  }
+}
+
+function playPoem() { speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。'); }
+
+function stopPoem() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  const fb = document.getElementById('audio-feedback');
+  if (fb) fb.textContent = '⏹️ 已停止';
+}
+
+// ============== 提示 ==============
+function showHint(num) {
+  const hints = {
+    1: '💡 提示："半轮"可能是农历月初或月末，月亮还没圆。也可能月亮被山遮住了一半。',
+    2: '💡 提示："夜发"是夜晚出发。古代人常趁晚上凉快、江面平静时坐船出发。月亮陪伴着诗人，更有意境。',
+    3: '💡 提示：诗中提到了峨眉山、平羌江、清溪、三峡、渝州。月亮的影子跟着诗人一路走，从四川到重庆！'
+  };
+  const fb = document.getElementById('hint-feedback');
+  fb.className = 'feedback show correct';
+  fb.innerHTML = hints[num];
+}
+
+// ============== 测试答题（答错可重选）==============
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.quiz-options').forEach(function(optGroup) {
+    optGroup.querySelectorAll('button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        // 清除同组所有选项的状态
+        const siblings = this.parentElement.querySelectorAll('button');
+        siblings.forEach(function(sib) {
+          sib.classList.remove('correct', 'incorrect');
+        });
+        
+        // 判断正误
+        const isCorrect = this.getAttribute('data-correct') === 'true';
+        if (isCorrect) {
+          this.classList.add('correct');
+        } else {
+          this.classList.add('incorrect');
+        }
+        
+        // 显示反馈
+        const feedbackDiv = this.closest('.quiz-question').querySelector('.feedback');
+        if (feedbackDiv) {
+          feedbackDiv.className = 'feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+          feedbackDiv.innerHTML = isCorrect
+            ? '✅ 答对了！太棒了！'
+            : '❌ 不太对哦，再想想？可以继续选择其他答案～';
+        }
+      });
+    });
+  });
+});
+
+// ============== SVG拖拽 ==============
+(function() {
+  const svg = document.getElementById('map-svg');
+  const moon = document.getElementById('draggable-moon');
+  if (!moon || !svg) return;
+
+  let dragging = false;
+  let sx, sy;
+
+  function svgPt(cx, cy) {
+    const p = svg.createSVGPoint();
+    p.x = cx; p.y = cy;
+    return p.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  moon.addEventListener('mousedown', function(e) {
+    e.preventDefault(); dragging = true;
+    moon.classList.add('dragging');
+    const pt = svgPt(e.clientX, e.clientY);
+    sx = pt.x - parseFloat(moon.getAttribute('cx'));
+    sy = pt.y - parseFloat(moon.getAttribute('cy'));
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+  });
+
+  moon.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) return;
+    e.preventDefault(); dragging = true;
+    moon.classList.add('dragging');
+    const t = e.touches[0], pt = svgPt(t.clientX, t.clientY);
+    sx = pt.x - parseFloat(moon.getAttribute('cx'));
+    sy = pt.y - parseFloat(moon.getAttribute('cy'));
+    document.addEventListener('touchmove', onTouchDrag, {passive:false});
+    document.addEventListener('touchend', endDrag);
+  }, {passive:false});
+
+  function onDrag(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pt = svgPt(e.clientX, e.clientY);
+    moveMoon(pt.x - sx, pt.y - sy);
+  }
+
+  function onTouchDrag(e) {
+    if (!dragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0], pt = svgPt(t.clientX, t.clientY);
+    moveMoon(pt.x - sx, pt.y - sy);
+  }
+
+  function moveMoon(nx, ny) {
+    moon.setAttribute('cx', nx);
+    moon.setAttribute('cy', ny);
+    const txt = moon.nextElementSibling;
+    if (txt) { txt.setAttribute('x', nx); txt.setAttribute('y', ny + 7); }
+    hoverCheck(nx, ny);
+  }
+
+  function hoverCheck(mx, my) {
+    const zones = [
+      {id:'emeishan-circle', cx:150, cy:200, r:40},
+      {id:'pingqiang-circle', cx:250, cy:320, r:35},
+      {id:'qingxi-circle', cx:380, cy:340, r:35},
+      {id:'sanxia-circle', cx:550, cy:350, r:40},
+      {id:'yuzhou-circle', cx:650, cy:380, r:35}
+    ];
+    zones.forEach(function(z) {
+      const c = document.getElementById(z.id);
+      if (!c) return;
+      const d = Math.sqrt(Math.pow(mx-z.cx,2)+Math.pow(my-z.cy,2));
+      c.classList.toggle('highlight', d < z.r+50);
+    });
+  }
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    moon.classList.remove('dragging');
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onTouchDrag);
+    document.removeEventListener('mouseup', endDrag);
+    document.removeEventListener('touchend', endDrag);
+
+    const mx = parseFloat(moon.getAttribute('cx'));
+    const my = parseFloat(moon.getAttribute('cy'));
+
+    const zones = [
+      {id:'emeishan-circle', name:'峨眉山', cx:150,cy:200,r:40, line:'峨眉山月半轮秋'},
+      {id:'pingqiang-circle', name:'平羌江', cx:250,cy:320,r:35, line:'影入平羌江水流'},
+      {id:'qingxi-circle', name:'清溪',   cx:380,cy:340,r:35, line:'夜发清溪向三峡'},
+      {id:'sanxia-circle', name:'三峡',   cx:550,cy:350,r:40, line:'夜发清溪向三峡'},
+      {id:'yuzhou-circle', name:'渝州',   cx:650,cy:380,r:35, line:'思君不见下渝州'}
+    ];
+
+    for (let i=0;i<zones.length;i++) {
+      const z=zones[i];
+      if (Math.sqrt(Math.pow(mx-z.cx,2)+Math.pow(my-z.cy,2)) < z.r+50) {
+        const fb=document.getElementById('interaction-feedback');
+        if(fb){fb.className='feedback show correct';fb.innerHTML='✅ 很好！月亮来到了<strong>'+z.name+'</strong>。<br>💡 对应诗句：<em>'+z.line+'</em>';}
+        const c=document.getElementById(z.id);
+        if(c)c.classList.add('placed');break;
+      }
+    }
+    document.querySelectorAll('.drop-circle').forEach(function(c){c.classList.remove('highlight');});
+  }
+})();
+
+function checkMap() {
+  const placed=document.querySelectorAll('.drop-circle.placed');
+  const fb=document.getElementById('interaction-feedback');
+  if(fb){fb.className='feedback show correct';fb.innerHTML='🌟<strong>太棒了！</strong><br>你已经找到了 '+placed.length+' 个地方！<br>💡 月亮的旅行路线：峨眉山→平羌江→清溪→三峡→渝州';}
+}
+
+function resetMap() {
+  const moon=document.getElementById('draggable-moon');
+  if(moon){moon.setAttribute('cx','400');moon.setAttribute('cy','100');const t=moon.nextElementSibling;if(t){t.setAttribute('x','400');t.setAttribute('y','107');}}
+  document.querySelectorAll('.drop-circle').forEach(function(c){c.classList.remove('placed','highlight');});
+  const fb=document.getElementById('interaction-feedback');
+  if(fb){fb.className='feedback';fb.classList.remove('show');}
+}
+
+// 初始化
+if ('speechSynthesis' in window) speechSynthesis.getVoices();
+console.log('《峨眉山月歌》v3.0 已加载');
+</script>
+
+</body>
+</html>

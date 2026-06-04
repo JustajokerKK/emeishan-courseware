@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -435,29 +435,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 </footer>
 
 <script>
-// ============== 音频播放 ==============
-let currentSpeech = null;
-
-function speakText(text) {
-  if (!('speechSynthesis' in window)) return;
-  if (currentSpeech) speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-CN';
-  u.rate = 0.9;
-  const voices = speechSynthesis.getVoices();
-  const cv = voices.find(v => v.lang.startsWith('zh'));
-  if (cv) u.voice = cv;
-  currentSpeech = u;
-  speechSynthesis.speak(u);
-  const fb = document.getElementById('audio-feedback');
-  if (fb) {
-    fb.textContent = '🔊 正在播放...';
-    u.onend = () => { fb.textContent = '✅ 播放完成！'; };
-  }
-}
-
-function playPoem() { speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。'); }
-
+// ============== 音频播放（使用语音合成API）==============
 function stopPoem() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   const fb = document.getElementById('audio-feedback');
@@ -629,8 +607,43 @@ function resetMap() {
   if(fb){fb.className='feedback';fb.classList.remove('show');}
 }
 
-// 初始化
-if ('speechSynthesis' in window) speechSynthesis.getVoices();
+// 初始化语音（解决Chrome首次getVoices返回空数组问题）
+let cachedVoices = [];
+function loadVoices() {
+  if (!('speechSynthesis' in window)) return;
+  cachedVoices = speechSynthesis.getVoices();
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+}
+function speakText(text) {
+  if (!('speechSynthesis' in window)) {
+    alert('您的浏览器不支持语音朗读，请使用Chrome或Edge浏览器');
+    return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.85;
+  u.pitch = 1.0;
+  // 优先使用中文语音
+  const zhVoice = cachedVoices.find(v => v.lang.startsWith('zh'));
+  if (zhVoice) {
+    u.voice = zhVoice;
+  } else if (cachedVoices.length > 0) {
+    u.voice = cachedVoices[0]; // 回退到第一个可用声音
+  }
+  const fb = document.getElementById('audio-feedback');
+  if (fb) {
+    fb.textContent = '🔊 正在播放...';
+    u.onend = () => { fb.textContent = '✅ 播放完成！'; };
+    u.onerror = () => { fb.textContent = '⚠️ 朗读不可用，请检查浏览器设置'; };
+  }
+  speechSynthesis.speak(u);
+}
+function playPoem() { speakText('峨眉山月半轮秋，影入平羌江水流。夜发清溪向三峡，思君不见下渝州。'); }
+
 console.log('《峨眉山月歌》v3.0 已加载');
 </script>
 
